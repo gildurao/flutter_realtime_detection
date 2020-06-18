@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_realtime_detection/object-in-image-detection/object_detection.dart';
+import 'package:flutter_realtime_detection/real-time-detection/bndbox.dart';
+import 'package:flutter_realtime_detection/real-time-detection/camera.dart';
+import 'package:flutter_realtime_detection/real-time-detection/models.dart';
 import 'package:tflite/tflite.dart';
 import 'dart:math' as math;
-
-import 'camera.dart';
-import 'bndbox.dart';
-import 'models.dart';
 
 class HomePage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> _recognitions;
   int _imageHeight = 0;
   int _imageWidth = 0;
+  int _index = 0;
   String _model = "";
 
   @override
@@ -75,46 +76,85 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
     return Scaffold(
-      body: _model == ""
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  RaisedButton(
-                    child: const Text(ssd),
-                    onPressed: () => onSelect(ssd),
-                  ),
-                  RaisedButton(
-                    child: const Text(yolo),
-                    onPressed: () => onSelect(yolo),
-                  ),
-                  RaisedButton(
-                    child: const Text(mobilenet),
-                    onPressed: () => onSelect(mobilenet),
-                  ),
-                  RaisedButton(
-                    child: const Text(posenet),
-                    onPressed: () => onSelect(posenet),
-                  ),
-                ],
-              ),
+      body: _index == 0
+          ? _buildRealTimeDetectionTab(
+              screen,
             )
-          : Stack(
-              children: [
-                Camera(
-                  widget.cameras,
-                  _model,
-                  setRecognitions,
+          : ObjectDetection(),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavBar() {
+    return BottomNavigationBar(
+      currentIndex: _index,
+      onTap: (index) {
+        setState(() {
+          _index = index;
+        });
+      },
+      items: [
+        BottomNavigationBarItem(
+          icon: Icon(
+            Icons.camera,
+          ),
+          title: Text(
+            'Real-time Detection',
+          ),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(
+            Icons.camera_alt,
+          ),
+          title: Text(
+            'Image Detection',
+          ),
+        ),
+      ],
+    );
+  }
+
+  RenderObjectWidget _buildRealTimeDetectionTab(Size screen) {
+    return _model == ""
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                RaisedButton(
+                  child: const Text(ssd),
+                  onPressed: () => onSelect(ssd),
                 ),
-                BndBox(
-                    _recognitions == null ? [] : _recognitions,
-                    math.max(_imageHeight, _imageWidth),
-                    math.min(_imageHeight, _imageWidth),
-                    screen.height,
-                    screen.width,
-                    _model),
+                RaisedButton(
+                  child: const Text(yolo),
+                  onPressed: () => onSelect(yolo),
+                ),
+                RaisedButton(
+                  child: const Text(mobilenet),
+                  onPressed: () => onSelect(mobilenet),
+                ),
+                RaisedButton(
+                  child: const Text(posenet),
+                  onPressed: () => onSelect(posenet),
+                ),
               ],
             ),
-    );
+          )
+        : Stack(
+            children: [
+              Camera(
+                widget.cameras,
+                _model,
+                setRecognitions,
+              ),
+              BndBox(
+                _recognitions == null ? [] : _recognitions,
+                math.max(_imageHeight, _imageWidth),
+                math.min(_imageHeight, _imageWidth),
+                screen.height,
+                screen.width,
+                _model,
+              ),
+            ],
+          );
   }
 }

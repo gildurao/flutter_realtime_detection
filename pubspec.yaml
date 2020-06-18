@@ -25,6 +25,9 @@ dev_dependencies:
     sdk: flutter
 
   camera: 0.5.7+4
+  image_picker: ^0.4.10
+  permission: 0.1.0
+  image: ^2.0.5
 
   tflite: 1.0.4
   
